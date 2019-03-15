@@ -11,6 +11,7 @@ var demo = new Vue({
   el: '#app',
 
   data: {
+    client: null,
     projects: [
       { id: 72329208877935, name: '[T] Manticore', color: '#aa62e3' },
       { id: 304439153626197, name: '[T] Griffin', color: '#fd612c' },
@@ -32,7 +33,20 @@ var demo = new Vue({
   },
 
   created: function () {
-    this.fetchData()
+    // this.fetchData()
+    this.client = Asana.Client.create().useAccessToken(localStorage.getItem('asana_access_token'));
+    // this.client.users.me().then(function(me) {
+    //   console.log(me);
+    // });
+    this.client.tasks.search('20739441009498',{
+      'projects.any': this.projects.map((project) => project.id).join(','),
+      opt_fields: 'name,completed,start_on,completed_at,modified_at,created_at,assignee.name,description,custom_fields,projects',
+      // workspace: '20739441009498',
+      limit: 100
+    })
+      .then(({ data }) => {
+        this.tasks = data;
+      });
   },
 
   computed: {
