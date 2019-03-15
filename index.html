@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Asana dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+    <link rel="icon" href="static/logo.png" type="image/x-icon">
+    <!-- <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"> -->
+    <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons' rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css" rel="stylesheet">
+
+    <style type="text/css">
+      #demo {
+        font-family: 'Helvetica', Arial, sans-serif;
+        padding: 20px;
+      }
+      a {
+        text-decoration: none;
+        color: #03A9F4;
+      }
+      ul {
+        list-style: none;
+      }
+      li {
+        line-height: 1.5em;
+        margin-bottom: 20px;
+      }
+      td.nw {
+        white-space: nowrap;
+      }
+      .author, .date {
+        font-weight: bold;
+      }
+      .point {
+        font-size: 50px;
+        vertical-align: middle;
+      }
+      .highcharts {
+        height: 50px;
+        width: 400px;
+      }
+      .bar {
+        height: 21px;
+        transition: fill .3s ease;
+        cursor: pointer;
+        font-family: Helvetica, sans-serif;
+      }
+      .bar text {
+        fill: #555;
+      }
+      .bar.waiting {
+        fill: #aaa;
+      }
+      .bar.modify {
+        fill: #aaa;
+      }
+      .bar.completed {
+        fill: green;
+      }
+      .chip {
+        color: white;
+        padding: 2px 10px;
+        border-radius: 10px;
+        font-size: 12px;
+      }
+      #search {
+        height: 50px;
+        font-size: 25px;
+        margin: 30px 35px;
+        padding: 5px;
+        width: 500px; 
+      }
+      .tasks-table th:nth-child(5) {
+        min-width: 300px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <v-app>
+        <v-content>
+          <v-container>
+            <input type="text"
+              id="search"
+              name="search"
+              v-model="searchText"
+              v-on:keyup="onSearch"
+              placeholder="Search...">
+
+            <v-data-table
+              :headers="headers"
+              :items="enrichedTasks"
+              hide-actions
+              class="tasks-table elevation-1"
+            >
+              <template slot="items" slot-scope="props">
+                <td class="nw">
+                  <template v-for="project in props.item.projects">
+                      <span class="chip" :style="{ 'background-color': project.color }">{{ project.name }}</span>
+                    </template>
+                </td>
+                <td class="nw">
+                  <span class="chip" :style="{ 'background-color': props.item.typeColor }">{{ props.item.type }}</span>
+                </td>
+                <td class="nw">
+                  <span class="chip" :class="props.item.priorityColor">{{ props.item.priority }}</span>
+                </td>
+                <td>
+                  <span class="author"><a :href="props.item.html_url" target="_blank" v-if="props.item.assignee">{{ props.item.assignee.name | initials }}</a></span>
+                </td>
+                <td>
+                  <a :href="'https://app.asana.com/0/' + props.item.projectId + '/' + props.item.id" target="_blank" class="commit">
+                    <span class="message">{{ props.item.name | truncate }}</span>
+                  </a>
+                </td>
+                <td>
+                  <div>
+                      <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="chart" width="820" height="20" aria-labelledby="title" role="img">
+                        <template v-for="n in props.item.waiting_days_max">
+                          <g class="bar" :class="{ waiting: !props.item.completed, completed: props.item.completed }">
+                            <rect width="15" height="15" :x="(n - 1) * 20"></rect>  
+                            <!-- <text x="0" y="8.5" dy=".35em">Waiting</text> -->
+                          </g>
+                        </template>
+                        <g class="bar" v-if="props.item.waiting_days > 10">
+                            <text dy=".35em" y="5.5" :x="props.item.waiting_days_max * 20">{{ props.item.waiting_days }}</text>  
+                        </g>
+                      </svg>
+                  </div>
+                </td>
+              </template>
+            </v-data-table>
+
+            
+
+
+          </v-container>
+        </v-content>
+      </v-app>
+    </div>
+
+        
+    
+      <!-- <text x="0" y="8.5" dy=".35em">Waiting</text> -->
+    
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script> -->
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/highcharts/highcharts.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
+    <script src="https://github.com/Asana/node-asana/releases/download/v0.16.6/asana-min.js"></script>
+
+
+    <!-- vue-highcharts should be load after Highmaps -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue-highcharts/dist/vue-highcharts.min.js"></script> -->
+
+    <script type="text/javascript" src="src/app.js"></script>
+  </body>
+</html>
