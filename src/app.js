@@ -95,7 +95,7 @@ name,completed,start_on,completed_at,modified_at,created_at,assignee.name,descri
       var xhr = new XMLHttpRequest()
       var self = this
       xhr.open('GET', this.apiURL)
-      xhr.setRequestHeader('Authorization', 'Bearer ' + localstorage.getItem('asana_access_token'));
+      xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('asana_access_token'));
       xhr.onload = function () {
         var res = JSON.parse(xhr.responseText);
         console.log(res);
