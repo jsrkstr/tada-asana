@@ -71,7 +71,7 @@ var demo = new Vue({
       { text: 'Projects', value: 'projects' },
       { text: 'Type', value: 'type' },
       { text: 'Priority', value: 'priority' },
-      { text: 'UX', value: 'ux_impact' },
+      { text: 'UX Imp.', value: 'ux_impact' },
       { text: 'Compl.', value: 'complexity' },
       { text: 'Name', value: 'name' },
       { text: 'Status', value: 'status' },
