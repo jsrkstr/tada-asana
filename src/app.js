@@ -12,41 +12,95 @@ var demo = new Vue({
 
   data: {
     client: null,
+    workspaceId: 20739441009498,
+    customFieldsIds: {
+        'Priority': 304579638329901,
+        'UX Impact': 933552981226587,
+        'Task Type': 304489422069008,
+        'Complexity': 374989979288140,
+        'Status': 421457998356288
+    },
+    customFields: {
+        Priority: {
+            P0: 4,
+            P1: 3,
+            P2: 2,
+            P3: 1,
+            default: 3 
+            // id: 304579638329901,
+            // options: {
+            //     'P0': 304579638329902,
+            //     'P1': 304579638329903,
+            //     'P2': 304579638329904
+            // }
+        },
+        'UX Impact': {
+            'High': 3,
+            'Medium': 2,
+            'Low': 1,
+            default: 2
+        },
+        'Task type': {
+            Bug: 4,
+            Improvement: 3,
+            Feature: 2,
+            Operation: 1,
+            default: 3
+        },
+        'Complexity': {
+            '-A': 4,
+            'A': 3,
+            'B': 2,
+            'C': 1,
+            default: 3
+        }
+    },
     projects: [
-      { id: 72329208877935, name: '[T] Manticore', color: '#aa62e3' },
-      { id: 304439153626197, name: '[T] Griffin', color: '#fd612c' },
-      { id: 395771757519195, name: '[T] Chimera', color: '#e7384f' },
-      { id: 704031921542960, name: '[T] Billing', color: '#e362e3' },
-      { id: 72695051296024, name: '[T] Misc', color: '#ea4d9d' },
-      { id: 608106801285869, name: '[T] Infra', color: '#22aaea' }
+      { id: 72329208877935, name: '[T] Manticore', color: '#aa62e3', feSectionId: 546133504730503, points: 4 },
+      { id: 304439153626197, name: '[T] Griffin', color: '#fd612c', feSectionId: 316036656769005, points: 1 },
+      { id: 395771757519195, name: '[T] Chimera', color: '#e7384f', feSectionId: 756261278646378, points: 3 },
+      { id: 704031921542960, name: '[T] Billing', color: '#e362e3', feSectionId: 841106707218224, points: 2 },
+      // { id: 72695051296024, name: '[T] Misc', color: '#ea4d9d', feSectionId: null },
+      // { id: 608106801285869, name: '[T] Infra', color: '#22aaea', feSectionId: null }
     ],
     searchText: '',
+    isLoading: true,
     tasks: null,
     headers: [
+      { text: 'Points', value: 'points' },
       { text: 'Projects', value: 'projects' },
       { text: 'Type', value: 'type' },
       { text: 'Priority', value: 'priority' },
-      { text: 'Assignee', value: 'assigneeName' },
+      { text: 'UX', value: 'ux_impact' },
+      { text: 'Compl.', value: 'complexity' },
       { text: 'Name', value: 'name' },
-      { text: 'Status', value: 'status' }
+      { text: 'Status', value: 'status' },
+      { text: 'Assignee', value: 'assigneeName' },
     ],  
   },
 
   created: function () {
-    // this.fetchData()
+    this.validateAccessToken();
     this.client = Asana.Client.create().useAccessToken(localStorage.getItem('asana_access_token'));
     // this.client.users.me().then(function(me) {
     //   console.log(me);
     // });
-    this.client.tasks.search('20739441009498',{
-      'projects.any': this.projects.map((project) => project.id).join(','),
-      opt_fields: 'name,completed,start_on,completed_at,modified_at,created_at,assignee.name,description,custom_fields,projects',
-      // workspace: '20739441009498',
-      limit: 100
+    this.client.tasks.search(this.workspaceId, {
+        // 'projects.any': this.projects.map((project) => project.id).join(','),
+        'sections.any': this.projects.map((project) => project.feSectionId).join(','),
+        'completed_on': null,
+        'opt_fields': [
+            'name','completed','start_on','completed_at','modified_at','created_at','assignee.name','description',
+            'custom_fields','projects'
+        ].join(','),
+        limit: 100
     })
       .then(({ data }) => {
         this.tasks = data;
+        this.isLoading = false;
       });
+
+    window.client = this.client;
   },
 
   computed: {
@@ -59,24 +113,22 @@ var demo = new Vue({
         task.waiting_days = !task.completed ? moment().diff(task.created_at, 'days') : moment(task.completed_at).diff(task.created_at, 'days');
         task.waiting_days = Math.max(task.waiting_days, 1); // min 1
         task.waiting_days_max = Math.min(task.waiting_days, 21) // max 21
-        task.type = this.getType(task);
-        task.typeColor = this.getTypeColor(task);
-        task.priority = this.getPriority(task);
-        task.priorityColor = this.getPriorityColor(task);
+        task.type = this.getCustomFieldSelectedValueName(task, this.customFieldsIds['Task Type']);
+        task.typeColor = this.getCustomFieldSelectedValueColor(task, this.customFieldsIds['Task Type']);
+        task.priority = this.getCustomFieldSelectedValueName(task, this.customFieldsIds['Priority']);
+        task.priorityColor = this.getCustomFieldSelectedValueColor(task, this.customFieldsIds['Priority']);
+        task.status = this.getCustomFieldSelectedValueName(task, this.customFieldsIds['Status']);
+        task.statusColor = this.getCustomFieldSelectedValueColor(task, this.customFieldsIds['Status']);
+        task.complexity = this.getCustomFieldSelectedValueName(task, this.customFieldsIds['Complexity']);
+        task.complexityColor = this.getCustomFieldSelectedValueColor(task, this.customFieldsIds['Complexity']);
+        task.uxImpact = this.getCustomFieldSelectedValueName(task, this.customFieldsIds['UX Impact']);
+        task.uxImpactColor = this.getCustomFieldSelectedValueColor(task, this.customFieldsIds['UX Impact']);
         task.projects = this.getProjects(task);
         task.projectId = this.getProjectId(task);
         task.assigneeName = task.assignee ? task.assignee.name : '';
+        task.points = this.getTaskPoints(task);
         return task;
       })
-    },
-    apiURL: function() {
-      return baseApiURL + `?&limit=50
-${this.searchText.length > 3 ? '&text=' + this.searchText : ''}
-&opt_fields=
-name,completed,start_on,completed_at,modified_at,created_at,assignee.name,description,custom_fields,projects
-&created_by.any=27954783206019
-&assignee_status=inbox
-&assigned_by.any=me`;
     }
   },
 
@@ -102,32 +154,34 @@ name,completed,start_on,completed_at,modified_at,created_at,assignee.name,descri
   },
 
   methods: {
+    validateAccessToken() {
+        if (!localStorage.getItem('asana_access_token')) {
+            let token = '';
+            while(!token) {
+                token = window.prompt('Asasa Assess Token');
+            }
+            localStorage.setItem('asana_access_token', token);
+        }
+    },
+    getTaskPoints(task) {
+        let totalPoints = 0;
+        task.custom_fields.map((customField) => {
+            const value = _.get(customField, 'enum_value.name') || 'default';
+            const points = _.get(this.customFields, `${customField.name}.${value}`) || 0;
+            totalPoints = totalPoints + points;
+        });
+        const project = _.find(this.projects, { id: task.projectId });
+        totalPoints = totalPoints + (project ? project.points : 0);
+        return totalPoints;
+    },
     onSearch: _.debounce(function() {
-      this.fetchData();  
+      // this.fetchData();  
     }, 1000),
-    fetchData: function () {
-      var xhr = new XMLHttpRequest()
-      var self = this
-      xhr.open('GET', this.apiURL)
-      xhr.setRequestHeader('Authorization', 'Bearer ' + localStorage.getItem('asana_access_token'));
-      xhr.onload = function () {
-        var res = JSON.parse(xhr.responseText);
-        console.log(res);
-        self.tasks = res.data;
-      }
-      xhr.send()
+    getCustomFieldSelectedValueName(task, fieldId) {
+        return _.get(_.find(task.custom_fields, { id: fieldId }), 'enum_value.name');
     },
-    getPriorityColor: function(task) {
-      return _.get(_.find(task.custom_fields, { id: 304579638329901}), 'enum_value.color');
-    },
-    getPriority: function(task) {
-      return _.get(_.find(task.custom_fields, { id: 304579638329901}), 'enum_value.name');
-    },
-    getTypeColor: function(task) {
-      return _.get(_.find(task.custom_fields, { id: 304489422069008}), 'enum_value.color');
-    },
-    getType: function(task) {
-      return _.get(_.find(task.custom_fields, { id: 304489422069008}), 'enum_value.name');
+    getCustomFieldSelectedValueColor(task, fieldId) {
+        return _.get(_.find(task.custom_fields, { id: fieldId }), 'enum_value.color');
     },
     getProjects: function(task) {
       return task.projects.map(item => {

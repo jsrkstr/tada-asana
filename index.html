@@ -70,8 +70,44 @@
         padding: 5px;
         width: 500px; 
       }
-      .tasks-table th:nth-child(5) {
+      .tasks-table th:nth-child(7) {
         min-width: 300px;
+      }
+      .red {
+        background-color: #e8384f !important;
+      }
+      .purple {
+        background-color: #aa62e3 !important;
+      }
+      .orange {
+        background-color: #fd612c !important;
+      }
+      .magenta {
+        background-color: #e362e3 !important;
+      }
+      .blue {
+        background-color: #4186e0 !important;
+      }
+      .yellow {
+        background-color: #eec300 !important;
+      }
+      .aqua {
+        background-color: #20aaea !important;      
+      }
+      .blue-green {
+        background-color: #37c5ab !important;
+      }
+      .yellow-green {
+        background-color: #a4cf30 !important;
+      }
+      .yellow-orange {
+        background-color: #fd9a00 !important;
+      }
+      .cool-gray {
+        background-color: #8da3a6 !important;
+      }
+      .hot-pink {
+        background-color: #ea4e9d !important;
       }
     </style>
   </head>
@@ -90,28 +126,42 @@
             <v-data-table
               :headers="headers"
               :items="enrichedTasks"
+              disable-initial-sort
               hide-actions
+              :loading="isLoading"
               class="tasks-table elevation-1"
             >
               <template slot="items" slot-scope="props">
+                <td>
+                    <span>{{ props.item.points }}</span>
+                </td>
                 <td class="nw">
                   <template v-for="project in props.item.projects">
                       <span class="chip" :style="{ 'background-color': project.color }">{{ project.name }}</span>
                     </template>
                 </td>
                 <td class="nw">
-                  <span class="chip" :style="{ 'background-color': props.item.typeColor }">{{ props.item.type }}</span>
+                  <span class="chip" :class="props.item.typeColor">{{ props.item.type }}</span>
                 </td>
                 <td class="nw">
                   <span class="chip" :class="props.item.priorityColor">{{ props.item.priority }}</span>
                 </td>
-                <td>
-                  <span class="author"><a :href="props.item.html_url" target="_blank" v-if="props.item.assignee">{{ props.item.assignee.name | initials }}</a></span>
+                <td class="nw">
+                  <span class="chip" :class="props.item.uxImpactColor">{{ props.item.uxImpact }}</span>
+                </td>
+                <td class="nw">
+                  <span class="chip" :class="props.item.complexityColor">{{ props.item.complexity }}</span>
                 </td>
                 <td>
                   <a :href="'https://app.asana.com/0/' + props.item.projectId + '/' + props.item.id" target="_blank" class="commit">
                     <span class="message">{{ props.item.name | truncate }}</span>
                   </a>
+                </td>
+                <td class="nw">
+                  <span class="chip" :class="props.item.statusColor">{{ props.item.status }}</span>
+                </td>
+                <td>
+                  <span class="author"><a :href="props.item.html_url" target="_blank" v-if="props.item.assignee">{{ props.item.assignee.name | initials }}</a></span>
                 </td>
                 <td>
                   <div>
