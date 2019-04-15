@@ -22,11 +22,11 @@ var demo = new Vue({
     },
     customFields: {
         Priority: {
-            P0: 4,
-            P1: 3,
-            P2: 2,
-            P3: 1,
-            default: 3 
+            P0: 3 * 2,
+            P1: 2 * 2,
+            P2: 1 * 2,
+            P3: 1 * 2,
+            default: 2 * 2
             // id: 304579638329901,
             // options: {
             //     'P0': 304579638329902,
@@ -35,24 +35,24 @@ var demo = new Vue({
             // }
         },
         'UX Impact': {
-            'High': 3,
-            'Medium': 2,
-            'Low': 1,
-            default: 2
+            'High': 3 * 3,
+            'Medium': 2 * 3,
+            'Low': 1 * 3,
+            default: 2 * 3
         },
         'Task type': {
-            Bug: 4,
-            Improvement: 3,
-            Feature: 2,
-            Operation: 1,
-            default: 3
+            Bug: 3 * 4,
+            Improvement: 2 * 4,
+            Feature: 1 * 4,
+            Operation: 1 * 4,
+            default: 2 * 4
         },
         'Complexity': {
-            '-A': 4,
-            'A': 3,
-            'B': 2,
+            '-A': 3,
+            'A': 2,
+            'B': 1,
             'C': 1,
-            default: 3
+            default: 2
         }
     },
     projects: [
@@ -66,6 +66,11 @@ var demo = new Vue({
     searchText: '',
     isLoading: true,
     tasks: null,
+    pagination: {
+      sortBy: 'points',
+      rowsPerPage: -1,
+      descending: true
+    },
     headers: [
       { text: 'Points', value: 'points' },
       { text: 'Projects', value: 'projects' },
@@ -85,20 +90,10 @@ var demo = new Vue({
     // this.client.users.me().then(function(me) {
     //   console.log(me);
     // });
-    this.client.tasks.search(this.workspaceId, {
-        // 'projects.any': this.projects.map((project) => project.id).join(','),
-        'sections.any': this.projects.map((project) => project.feSectionId).join(','),
-        'completed_on': null,
-        'opt_fields': [
-            'name','completed','start_on','completed_at','modified_at','created_at','assignee.name','description',
-            'custom_fields','projects'
-        ].join(','),
-        limit: 100
-    })
-      .then(({ data }) => {
-        this.tasks = data;
-        this.isLoading = false;
-      });
+    this.fetchTasks();
+    window.setInterval(() => {
+      this.fetchTasks();
+    }, 3*60*1000);
 
     window.client = this.client;
   },
@@ -162,6 +157,38 @@ var demo = new Vue({
             }
             localStorage.setItem('asana_access_token', token);
         }
+    },
+    fetchTasks() {
+      this.client.tasks.search(this.workspaceId, {
+          // 'projects.any': this.projects.map((project) => project.id).join(','),
+          'sections.any': this.projects.map((project) => project.feSectionId).join(','),
+          'completed_on': null,
+          'opt_fields': [
+              'name','completed','start_on','completed_at','modified_at','created_at','assignee.name','description',
+              'custom_fields','projects'
+          ].join(','),
+          limit: 100
+      })
+        .then(({ data }) => {
+          this.tasks = data;
+          this.isLoading = false;
+
+          this.updateTasks();
+        });
+    },
+    updateTasks: async function() {
+      for (let i = 0; i < this.enrichedTasks.length; i++) {
+        const task = this.enrichedTasks[i];
+        const customField = _.find(task.custom_fields, { name: 'Points' });
+        if (customField && _.get(customField , 'number_value') !== task.points) {
+          console.log('update task',  task.id, { [customField.id]: task.points });
+          await this.client.tasks.update(task.id, { 
+            custom_fields: {
+              [customField.id]: task.points
+            }
+          });
+        }
+      }
     },
     getTaskPoints(task) {
         let totalPoints = 0;
