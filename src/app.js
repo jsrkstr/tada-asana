@@ -13,12 +13,14 @@ var demo = new Vue({
   data: {
     client: null,
     workspaceId: 20739441009498,
+    sprintBoardProjectId: 1118396450472358,
+    sprintBoardBacklogSectionId: 1118396450472394,
     customFieldsIds: {
-        'Priority': 304579638329901,
-        'UX Impact': 933552981226587,
-        'Task Type': 304489422069008,
-        'Complexity': 374989979288140,
-        'Status': 421457998356288
+      'Priority': 304579638329901,
+      'UX Impact': 933552981226587,
+      'Task Type': 304489422069008,
+      'Complexity': 374989979288140,
+      'Status': 421457998356288
     },
     customFields: {
         Priority: {
@@ -73,7 +75,7 @@ var demo = new Vue({
     },
     headers: [
       { text: 'Points', value: 'points' },
-      { text: 'Projects', value: 'projects' },
+      { text: 'Projects', value: 'displayProjects' },
       { text: 'Type', value: 'type' },
       { text: 'Priority', value: 'priority' },
       { text: 'UX Imp.', value: 'ux_impact' },
@@ -118,7 +120,7 @@ var demo = new Vue({
         task.complexityColor = this.getCustomFieldSelectedValueColor(task, this.customFieldsIds['Complexity']);
         task.uxImpact = this.getCustomFieldSelectedValueName(task, this.customFieldsIds['UX Impact']);
         task.uxImpactColor = this.getCustomFieldSelectedValueColor(task, this.customFieldsIds['UX Impact']);
-        task.projects = this.getProjects(task);
+        task.displayProjects = this.getProjects(task);
         task.projectId = this.getProjectId(task);
         task.assigneeName = task.assignee ? task.assignee.name : '';
         task.points = this.getTaskPoints(task);
@@ -179,8 +181,10 @@ var demo = new Vue({
     updateTasks: async function() {
       for (let i = 0; i < this.enrichedTasks.length; i++) {
         const task = this.enrichedTasks[i];
+        
+        // Add points to task if points field exist on task
         const customField = _.find(task.custom_fields, { name: 'Points' });
-        if (customField && _.get(customField , 'number_value') !== task.points) {
+        if (customField && !_.get(customField , 'number_value')) {
           console.log('update task',  task.id, { [customField.id]: task.points });
           await this.client.tasks.update(task.id, { 
             custom_fields: {
@@ -188,6 +192,54 @@ var demo = new Vue({
             }
           });
         }
+
+        // Set project custom field in task if not aleady added
+        const customField2 = _.find(task.custom_fields, { name: 'Project' });
+        if (customField2 && !customField2.enum_value) {
+          const mainProject = task.displayProjects[0];
+          const minProjectName = _.last(_.split(_.get(mainProject, 'name'), ' '));
+          const projectOption = _.find(customField2.enum_options, (option) => {
+            return option.name === minProjectName;
+          });
+
+          if (projectOption) {
+            console.log('update task project custom field',  task.id, { 
+              custom_fields: {
+                [customField2.id]: projectOption.id
+              }
+            });
+            await this.client.tasks.update(task.id, { 
+              custom_fields: {
+                [customField2.id]: projectOption.id
+              }
+            });
+          }
+        }
+
+        // Add task to [T] Sprint board project (section backlog) if it's not already added
+        const project = _.find(task.projects, { id: this.sprintBoardProjectId });
+        if (!project) {
+          console.log('add project to task',  task.id, {
+            project: this.sprintBoardProjectId,
+            section: this.sprintBoardBacklogSectionId
+          });
+          await this.client.tasks.addProject(task.id, {
+            project: this.sprintBoardProjectId,
+            section: this.sprintBoardBacklogSectionId
+          });
+        }
+
+        // Add task to section Done of project [T] Sprint backlog if it is completed
+        // if (task.completed) {
+        //   const project = _.find(task.projects, { id: this.sprintBoardProjectId });
+        //   if (project && ) {
+        //     console.log('add project to task',  task.id, { [customField.id]: task.points });
+        //     // await this.client.tasks.addProject(task.id, {
+        //     //   project: this.sprintBoardProjectId,
+        //     //   section: this.sprintBoardBacklogSectionId
+        //     // });
+        //   }
+        // }
       }
     },
     getTaskPoints(task) {
@@ -197,7 +249,7 @@ var demo = new Vue({
             const points = _.get(this.customFields, `${customField.name}.${value}`) || 0;
             totalPoints = totalPoints + points;
         });
-        const project = _.find(this.projects, { id: task.projectId });
+        const project = _.find(this.displayProjects, { id: task.projectId });
         totalPoints = totalPoints + (project ? project.points : 0);
         return totalPoints;
     },

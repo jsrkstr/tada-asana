@@ -137,7 +137,7 @@
                     <span>{{ props.item.points }}</span>
                 </td>
                 <td class="nw">
-                  <template v-for="project in props.item.projects">
+                  <template v-for="project in props.item.displayProjects">
                       <span class="chip" :style="{ 'background-color': project.color }">{{ project.name }}</span>
                     </template>
                 </td>
