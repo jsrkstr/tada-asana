@@ -15,6 +15,8 @@ var demo = new Vue({
     workspaceId: 20739441009498,
     sprintBoardProjectId: 1118396450472358,
     sprintBoardBacklogSectionId: 1118396450472394,
+    feBoardProjectId: 1119707884067783,
+    feBoardBacklogSectionId: 1119707884067790,
     customFieldsIds: {
       'Priority': 304579638329901,
       'UX Impact': 933552981226587,
@@ -226,6 +228,19 @@ var demo = new Vue({
           await this.client.tasks.addProject(task.id, {
             project: this.sprintBoardProjectId,
             section: this.sprintBoardBacklogSectionId
+          });
+        }
+
+        // Add task to [T] FE board project (section backlog) if it's not already added
+        const project2 = _.find(task.projects, { id: this.feBoardProjectId });
+        if (!project2) {
+          console.log('add project to task',  task.id, {
+            project: this.feBoardProjectId,
+            section: this.feBoardBacklogSectionId
+          });
+          await this.client.tasks.addProject(task.id, {
+            project: this.feBoardProjectId,
+            section: this.feBoardBacklogSectionId
           });
         }
 
