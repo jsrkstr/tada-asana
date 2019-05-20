@@ -52,7 +52,7 @@ var demo = new Vue({
             default: 2 * 4
         },
         'Complexity': {
-            '-A': 3,
+            '-A': 4,
             'A': 2,
             'B': 1,
             'C': 1,
@@ -60,7 +60,7 @@ var demo = new Vue({
         }
     },
     projects: [
-      { id: 72329208877935, name: '[T] Manticore', color: '#aa62e3', feSectionId: 546133504730503, points: 4 },
+      { id: 72329208877935, name: '[T] Manticore', color: '#aa62e3', feSectionId: 1123730497303264, points: 4 },
       { id: 304439153626197, name: '[T] Griffin', color: '#fd612c', feSectionId: 316036656769005, points: 1 },
       { id: 395771757519195, name: '[T] Chimera', color: '#e7384f', feSectionId: 756261278646378, points: 3 },
       { id: 704031921542960, name: '[T] Billing', color: '#e362e3', feSectionId: 841106707218224, points: 2 },
