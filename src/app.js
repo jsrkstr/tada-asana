@@ -185,15 +185,15 @@ var demo = new Vue({
         const task = this.enrichedTasks[i];
         
         // Add points to task if points field exist on task
-        const customField = _.find(task.custom_fields, { name: 'Points' });
-        if (customField && !_.get(customField , 'number_value')) {
-          console.log('update task',  task.id, { [customField.id]: task.points });
-          await this.client.tasks.update(task.id, { 
-            custom_fields: {
-              [customField.id]: task.points
-            }
-          });
-        }
+        // const customField = _.find(task.custom_fields, { name: 'Points' });
+        // if (customField && !_.get(customField , 'number_value')) {
+        //   console.log('update task',  task.id, { [customField.id]: task.points });
+        //   await this.client.tasks.update(task.id, { 
+        //     custom_fields: {
+        //       [customField.id]: task.points
+        //     }
+        //   });
+        // }
 
         // Set project custom field in task if not aleady added
         const customField2 = _.find(task.custom_fields, { name: 'Project' });
@@ -232,17 +232,17 @@ var demo = new Vue({
         }
 
         // Add task to [T] FE board project (section backlog) if it's not already added
-        const project2 = _.find(task.projects, { id: this.feBoardProjectId });
-        if (!project2) {
-          console.log('add project to task',  task.id, {
-            project: this.feBoardProjectId,
-            section: this.feBoardBacklogSectionId
-          });
-          await this.client.tasks.addProject(task.id, {
-            project: this.feBoardProjectId,
-            section: this.feBoardBacklogSectionId
-          });
-        }
+        // const project2 = _.find(task.projects, { id: this.feBoardProjectId });
+        // if (!project2) {
+        //   console.log('add project to task',  task.id, {
+        //     project: this.feBoardProjectId,
+        //     section: this.feBoardBacklogSectionId
+        //   });
+        //   await this.client.tasks.addProject(task.id, {
+        //     project: this.feBoardProjectId,
+        //     section: this.feBoardBacklogSectionId
+        //   });
+        // }
 
         // Add task to section Done of project [T] Sprint backlog if it is completed
         // if (task.completed) {
